@@ -1,0 +1,6 @@
+venv/
+.idea/
+__pycache__/
+ciphered.txt
+deciphered.txt
+plaintext.txt
