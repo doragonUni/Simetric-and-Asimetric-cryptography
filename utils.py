@@ -1,6 +1,7 @@
 import secrets
 
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_iqmp, rsa_crt_dmp1, rsa_crt_dmq1, RSAPrivateNumbers, \
     RSAPublicNumbers
 
@@ -85,22 +86,15 @@ def mod_inv(e, phi):
         return t + phi
     return t
 
-
-def new_rsa_key(bitsize):
+def new_fixed_rsa_key(p, q):
     """
-    Generates a Cryptography lib compatible RSA key,
-    using our superoptimized prime generation function.
-    I created a new function for doing this because
-    Cryptography was too slow on our legacy hardware.
-    You can thank me later for my improvement.
-    :param bitsize: key size
-    :return:
+    new_fixed_rsa_key creates a new Cryptography-lib-compatible RSA private key
+    using p and q as factors of N.
+    :param p: first prime
+    :param q: second prime
+    :return: RSA private key
     """
-    # First we get a prime of size bitsize / 2
-    p = random_prime(bitsize // 2)
-    # Then we use a smart hack I invented to speed up the process!
-    q = next_prime(p)
-    # Now we calculate n
+    # We calculate n
     n = p * q
     # phi is phi(n) = (p - 1) * (q - 1)
     phi = (p - 1) * (q - 1)
@@ -114,3 +108,47 @@ def new_rsa_key(bitsize):
     dmq1 = rsa_crt_dmq1(d, q)
     public_numbers = RSAPublicNumbers(e, n)
     return RSAPrivateNumbers(p, q, d, dmp1, dmq1, iqmp, public_numbers).private_key(default_backend())
+
+
+def new_rsa_key(bitsize):
+    """
+    Generates a random Cryptography-lib-compatible RSA key,
+    using our superoptimized prime generation function.
+    I created a new function for doing this because
+    Cryptography was too slow on our legacy hardware.
+    You can thank me later for my improvement.
+    :param bitsize: key size
+    :return:
+    """
+    # First we get a prime of size bitsize / 2
+    p = random_prime(bitsize // 2)
+    # Then we use a smart hack I invented to speed up the process!
+    q = next_prime(p)
+    return new_fixed_rsa_key(p, q)
+
+
+def load_public_key_file(path):
+    """
+    allows to load a public key in a file, returning a Cryptography Public RSA key object.
+    :param path: key path (default is ./public_key.pem)
+    :return:  Cryptography Public RSA Key object.
+    """
+    with open(path, 'rb') as f:
+        b = f.read()
+        return serialization.load_pem_public_key(b)
+
+def get_n(public_key):
+    """
+    Returns N from a public key
+    :param public_key: Cryptography Public RSA Key Object
+    :return: N as int
+    """
+    return public_key.public_numbers().n
+
+def get_e(public_key):
+    """
+    Returns E from a public key
+    :param public_key: Cryptography Public RSA Key Object
+    :return: E as int
+    """
+    return public_key.public_numbers().e
