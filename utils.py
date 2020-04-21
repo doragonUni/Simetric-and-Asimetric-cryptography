@@ -135,7 +135,7 @@ def load_public_key_file(path):
     """
     with open(path, 'rb') as f:
         b = f.read()
-        return serialization.load_pem_public_key(b)
+        return serialization.load_pem_public_key(b, default_backend())
 
 def get_n(public_key):
     """
