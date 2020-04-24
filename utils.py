@@ -42,8 +42,12 @@ def miller_rabin(n, k):
     :param k: number of times to make the check
     :return true if number is probably prime, false otherwise:
     """
-    if n % 2 == 0:
+    if n == 1:
+        return False
+    elif n % 2 == 0:
         return n == 2  # return true only if n is pair and 2, if it is pair and not 2 return false
+    elif n == 3 or n == 5:
+        return True
     d = n - 1
     r = 0
     while d % 2 == 0:
@@ -51,16 +55,18 @@ def miller_rabin(n, k):
         d >>= 1
     # now n = 2^r * d
     for i in range(k):
-        x = 1
-        a = secrets.randbelow(n - 4) + 2  # a \in [2, n-2]
+        a = secrets.randbelow(n - 5) + 2  # a \in [2, n-2]
         x = pow(a, d, n)
         if x == 1 or x == n - 1:
             continue
-        for j in range(r - 1):
-            x = (x << 1) % n
+        for j in range(r-1):
+            x = pow(x, 2, n)
+            if x == 1:
+                return False
             if x == n - 1:
-                continue
-        return False
+                break
+        else:
+            return False
     return True
 
 
@@ -85,6 +91,7 @@ def mod_inv(e, phi):
     elif t < 0:
         return t + phi
     return t
+
 
 def new_fixed_rsa_key(p, q):
     """
@@ -137,6 +144,7 @@ def load_public_key_file(path):
         b = f.read()
         return serialization.load_pem_public_key(b, default_backend())
 
+
 def get_n(public_key):
     """
     Returns N from a public key
@@ -144,6 +152,7 @@ def get_n(public_key):
     :return: N as int
     """
     return public_key.public_numbers().n
+
 
 def get_e(public_key):
     """
