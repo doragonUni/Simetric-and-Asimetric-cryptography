@@ -9,7 +9,7 @@ This is an example of how to use my excellent key generation function.
 ### How to use
 
 ```bash
-pip install requirements.txt
+pip install -r requirements.txt
 python main.py
 ```
 
